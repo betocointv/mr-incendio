@@ -200,3 +200,45 @@ def fazer_logout():
             "conversa_atual", "pergunta_sugerida"]
     for k in keys:
         st.session_state.pop(k, None)
+
+
+# ── Recuperação de senha ───────────────────────────────────────────────────────
+
+def solicitar_reset(email: str) -> tuple[bool, str]:
+    """
+    Inicia fluxo de recuperação. Gera token, salva no DB e envia e-mail.
+    Sempre retorna mensagem genérica para não revelar se o e-mail existe.
+    """
+    import secrets as _sec
+    from db import buscar_usuario_email, criar_token_reset
+    from email_utils import enviar_email_reset
+
+    MSG_GENERICA = ("Se este e-mail estiver cadastrado, você receberá as "
+                    "instruções de recuperação em breve.")
+
+    usuario = buscar_usuario_email(email.strip().lower())
+    if not usuario:
+        return True, MSG_GENERICA
+
+    token = _sec.token_urlsafe(32)
+    criar_token_reset(usuario["id"], token, expira_minutos=30)
+    enviar_email_reset(usuario["email"], usuario["nome"], token)
+
+    return True, MSG_GENERICA
+
+
+def confirmar_reset(token: str, nova_senha: str) -> tuple[bool, str]:
+    """Valida token e atualiza senha. Retorna (sucesso, mensagem)."""
+    from db import buscar_token_reset, invalidar_token_reset, atualizar_senha
+
+    row = buscar_token_reset(token)
+    if not row:
+        return False, "Link de recuperação inválido ou expirado. Solicite um novo."
+
+    ok_senha, msg_senha = _senha_forte(nova_senha)
+    if not ok_senha:
+        return False, msg_senha
+
+    atualizar_senha(row["usuario_id"], hash_senha(nova_senha))
+    invalidar_token_reset(token)
+    return True, "Senha alterada com sucesso! Faça login com sua nova senha."

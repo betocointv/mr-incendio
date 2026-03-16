@@ -83,6 +83,15 @@ def init_db():
             ip          TEXT,
             criado_em   TEXT NOT NULL
         );
+
+        CREATE TABLE IF NOT EXISTS reset_tokens (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario_id  INTEGER NOT NULL REFERENCES usuarios(id),
+            token       TEXT UNIQUE NOT NULL,
+            expira_em   TEXT NOT NULL,
+            usado       INTEGER NOT NULL DEFAULT 0,
+            criado_em   TEXT NOT NULL
+        );
         """)
 
         # Migrações: colunas adicionadas após criação inicial
@@ -431,3 +440,42 @@ def contar_conversas(usuario_id: int) -> int:
 def listar_pacotes() -> list:
     with conexao() as conn:
         return conn.execute("SELECT * FROM pacotes ORDER BY creditos").fetchall()
+
+
+# ── Recuperação de senha ────────────────────────────────────────────────────────
+
+def criar_token_reset(usuario_id: int, token: str, expira_minutos: int = 30):
+    """Invalida tokens anteriores do usuário e cria um novo."""
+    expira = (datetime.now() + timedelta(minutes=expira_minutos)).isoformat()
+    with conexao() as conn:
+        conn.execute(
+            "UPDATE reset_tokens SET usado=1 WHERE usuario_id=? AND usado=0",
+            (usuario_id,)
+        )
+        conn.execute(
+            "INSERT INTO reset_tokens (usuario_id, token, expira_em, criado_em) VALUES (?,?,?,?)",
+            (usuario_id, token, expira, datetime.now().isoformat())
+        )
+
+
+def buscar_token_reset(token: str) -> Optional[sqlite3.Row]:
+    """Retorna token não-usado e não-expirado."""
+    with conexao() as conn:
+        return conn.execute(
+            """SELECT * FROM reset_tokens
+               WHERE token=? AND usado=0 AND expira_em > ?""",
+            (token, datetime.now().isoformat())
+        ).fetchone()
+
+
+def invalidar_token_reset(token: str):
+    with conexao() as conn:
+        conn.execute("UPDATE reset_tokens SET usado=1 WHERE token=?", (token,))
+
+
+def atualizar_senha(usuario_id: int, nova_hash: str):
+    with conexao() as conn:
+        conn.execute(
+            "UPDATE usuarios SET senha_hash=?, tentativas_login=0, bloqueado_ate='' WHERE id=?",
+            (nova_hash, usuario_id)
+        )

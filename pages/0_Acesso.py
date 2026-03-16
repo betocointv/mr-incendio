@@ -2,7 +2,7 @@
 Mr. Incêndio — Página de acesso (login / cadastro).
 """
 import streamlit as st
-from auth import login, registrar, sessao_logada
+from auth import login, registrar, sessao_logada, solicitar_reset, confirmar_reset
 from ui import aplicar_tema
 
 st.set_page_config(page_title="Acesso · Mr. Incêndio", page_icon="🔥", layout="wide")
@@ -10,6 +10,9 @@ aplicar_tema()
 
 if sessao_logada():
     st.switch_page("pages/1_Chat.py")
+
+# Detecta modo de recuperação via query param ?token=...
+_token_reset = st.query_params.get("token", "")
 
 # ── CSS ───────────────────────────────────────────────────────────────────────
 st.markdown("""
@@ -137,6 +140,22 @@ a.back-link:hover { color:#fff !important; }
 [data-testid="InputInstructions"] { display: none !important; }
 small[data-testid="InputInstructions"] { display: none !important; }
 
+/* ── Link "Esqueci minha senha" ── */
+a.forgot-link, a.forgot-link:link, a.forgot-link:visited {
+  display:block; text-align:right; margin-top:.5rem;
+  color:var(--muted) !important; font-size:.8rem;
+  text-decoration:none !important; cursor:pointer;
+}
+a.forgot-link:hover { color:var(--wine-lt) !important; }
+
+/* ── Box de recuperação de senha ── */
+.recovery-box {
+  background:var(--bg2); border:1px solid var(--border);
+  border-radius:20px; padding:2rem 1.5rem;
+}
+.recovery-box h3 { color:#fff; font-size:1.2rem; font-weight:700; margin:0 0 .4rem; }
+.recovery-box p  { color:var(--muted); font-size:.86rem; margin:0 0 1.5rem; }
+
 /* ══════════════ MOBILE ══════════════ */
 @media (max-width: 767px) {
   .lp-nav { padding: 0 1rem; height: 56px; }
@@ -188,6 +207,32 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
+# ── MODO RECUPERAÇÃO (link do e-mail) ─────────────────────────────────────────
+if _token_reset:
+    st.markdown("""
+    <div class="recovery-box">
+      <h3>🔑 Criar nova senha</h3>
+      <p>Digite e confirme sua nova senha abaixo.</p>
+    </div>
+    """, unsafe_allow_html=True)
+    with st.form("form_nova_senha"):
+        nova  = st.text_input("Nova senha", type="password")
+        nova2 = st.text_input("Confirmar nova senha", type="password")
+        salvar = st.form_submit_button("Salvar nova senha", use_container_width=True)
+    if salvar:
+        if nova != nova2:
+            st.error("As senhas não coincidem.")
+        else:
+            ok, msg = confirmar_reset(_token_reset, nova)
+            if ok:
+                st.success(msg)
+                st.query_params.clear()
+                st.info("Faça login abaixo com sua nova senha.")
+                st.rerun()
+            else:
+                st.error(msg)
+    st.stop()
+
 # ── TABS / FORMULÁRIOS ────────────────────────────────────────────────────────
 aba_login, aba_cadastro = st.tabs(["Entrar", "Criar conta"])
 
@@ -196,6 +241,13 @@ with aba_login:
         email = st.text_input("E-mail")
         senha = st.text_input("Senha", type="password")
         entrar = st.form_submit_button("Entrar", use_container_width=True)
+
+    # Link "Esqueci minha senha"
+    st.markdown(
+        '<a class="forgot-link" href="?recuperar=1">Esqueci minha senha</a>',
+        unsafe_allow_html=True
+    )
+
     if entrar:
         if not email or not senha:
             st.error("Preencha e-mail e senha.")
@@ -212,6 +264,20 @@ with aba_login:
                 st.switch_page("pages/1_Chat.py")
             else:
                 st.error("E-mail ou senha incorretos.")
+
+    # Formulário de recuperação (modo ?recuperar=1)
+    if st.query_params.get("recuperar"):
+        st.divider()
+        st.markdown("**Recuperar senha**")
+        with st.form("form_recuperar"):
+            email_rec = st.text_input("Digite seu e-mail cadastrado", key="email_rec")
+            enviar = st.form_submit_button("Enviar instruções", use_container_width=True)
+        if enviar:
+            if not email_rec:
+                st.error("Informe seu e-mail.")
+            else:
+                ok, msg = solicitar_reset(email_rec)
+                st.success(msg)
 
 with aba_cadastro:
     # Seletor cascata de tipo de conta — fica FORA do form para reagir imediatamente
