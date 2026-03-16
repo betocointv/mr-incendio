@@ -1,0 +1,19 @@
+# ── Segredos — NUNCA enviar ao GitHub ──────────────────────────────────────
+.streamlit/secrets.toml
+
+# ── Banco de dados local (regenerado automaticamente) ───────────────────────
+dados/db.sqlite
+dados/conversas/
+
+# ── PDFs das normas (pesados demais, não necessários no deploy) ─────────────
+normas/
+
+# ── Python ──────────────────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# ── OS ──────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db

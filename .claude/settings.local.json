@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:www.cbmerj.rj.gov.br)",
+      "WebSearch",
+      "Bash(python -c \":*)",
+      "Bash(pip install:*)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(python -c \"import streamlit; print\\(streamlit.__version__\\)\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8501/healthz)",
+      "Bash(curl -s -o /dev/null -w %{http_code} http://localhost:8501/)",
+      "Read(//tmp/**)",
+      "Bash(powershell -Command \"\\(Get-Content ''4_Planos.py''\\) -replace ''#ff4b12'',''#b83530'' | Set-Content ''4_Planos.py''; \\(Get-Content ''3_Pontos.py''\\) -replace ''#ff4b12'',''#b83530'' | Set-Content ''3_Pontos.py''; \\(Get-Content ''5_Empresa.py''\\) -replace ''#ff4b12'',''#b83530'' | Set-Content ''5_Empresa.py''\")",
+      "Bash(grep -E \"\\\\.\\(py|json|txt|md\\)$\")",
+      "Bash(python -c \"import sys, json; data = json.load\\(sys.stdin\\); print\\(''''Length:'''', len\\(data[''''texto'''']\\)\\); print\\(''''Preview:'''', data[''''texto''''][:300]\\)\")",
+      "Bash(while read:*)",
+      "Bash(do echo:*)",
+      "Bash(python -c \"import sys, json; data = json.load\\(sys.stdin\\); print\\(len\\(data[''''texto'''']\\)\\)\")",
+      "Bash(done)",
+      "Bash(grep -E '\\\\sX\\\\s|\\\\sX$|^X\\\\s')",
+      "Bash(python -c \"import sys, json; data = json.load\\(sys.stdin\\); print\\(data[''''texto'''']\\)\")",
+      "Bash(netstat -ano)",
+      "Bash(findstr :8501)",
+      "Bash(findstr LISTENING)",
+      "Bash(taskkill /PID 17280 /F)",
+      "Bash(cmd /c \"taskkill /PID 17280 /F\")",
+      "Bash(cmd /c \"taskkill /F /IM streamlit.exe 2>nul & taskkill /F /FI \"\"IMAGENAME eq python.exe\"\" /FI \"\"WINDOWTITLE eq streamlit*\"\" 2>nul & exit 0\")",
+      "Bash(cmd /c \"netstat -ano | findstr :8501 | findstr LISTENING\")",
+      "Bash(cmd /c \"netstat -ano | findstr :8501\")",
+      "WebFetch(domain:preview.uideck.com)",
+      "Bash(dir \"C:\\\\Users\\\\BetoCoin\\\\Desktop\\\\Incendio\\\\dados\")",
+      "Bash(dir \"C:\\\\Users\\\\BetoCoin\\\\Desktop\\\\Incendio\\\\.streamlit\" /b)",
+      "Bash(powershell -Command \"Get-ChildItem ''C:\\\\Users\\\\BetoCoin\\\\Desktop\\\\Incendio\\\\dados'' | Select-Object Name, @{N=''MB'';E={[math]::Round\\($_Length/1MB,2\\)}}\")",
+      "Bash(powershell -Command \"Get-ChildItem ''C:\\\\Users\\\\BetoCoin\\\\Desktop\\\\Incendio\\\\dados'' | ForEach-Object { Write-Host \\($_Name + '': '' + [math]::Round\\($_Length/1MB, 2\\) + '' MB''\\) }\")",
+      "Bash(powershell -Command \"dir ''C:\\\\Users\\\\BetoCoin\\\\Desktop\\\\Incendio\\\\dados'' | sort Length -Descending | ft Name, Length -AutoSize\")"
+    ]
+  }
+}
