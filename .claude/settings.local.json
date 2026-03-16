@@ -32,7 +32,9 @@
       "Bash(dir \"C:\\\\Users\\\\BetoCoin\\\\Desktop\\\\Incendio\\\\.streamlit\" /b)",
       "Bash(powershell -Command \"Get-ChildItem ''C:\\\\Users\\\\BetoCoin\\\\Desktop\\\\Incendio\\\\dados'' | Select-Object Name, @{N=''MB'';E={[math]::Round\\($_Length/1MB,2\\)}}\")",
       "Bash(powershell -Command \"Get-ChildItem ''C:\\\\Users\\\\BetoCoin\\\\Desktop\\\\Incendio\\\\dados'' | ForEach-Object { Write-Host \\($_Name + '': '' + [math]::Round\\($_Length/1MB, 2\\) + '' MB''\\) }\")",
-      "Bash(powershell -Command \"dir ''C:\\\\Users\\\\BetoCoin\\\\Desktop\\\\Incendio\\\\dados'' | sort Length -Descending | ft Name, Length -AutoSize\")"
+      "Bash(powershell -Command \"dir ''C:\\\\Users\\\\BetoCoin\\\\Desktop\\\\Incendio\\\\dados'' | sort Length -Descending | ft Name, Length -AutoSize\")",
+      "Bash(gh auth:*)",
+      "Bash(gh repo:*)"
     ]
   }
 }
