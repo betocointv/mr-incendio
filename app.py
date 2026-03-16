@@ -463,8 +463,8 @@ function lpScroll(id) {
     <a href="#contato"   onclick="return lpScroll('contato');">Contato</a>
   </div>
   <div class="lp-nav-btns">
-    <a class="btn-ghost" href="/Acesso">Entrar</a>
-    <a class="btn-wine"  href="/Acesso">Criar conta grátis</a>
+    <a class="btn-ghost" href="/Acesso" target="_self">Entrar</a>
+    <a class="btn-wine"  href="/Acesso" target="_self">Criar conta grátis</a>
   </div>
 </nav>
 """, unsafe_allow_html=True)
@@ -480,7 +480,7 @@ st.markdown("""
       sem perder tempo. Só a norma certa do RJ.
     </p>
     <div class="hero-actions">
-      <a class="cta-primary"    href="/Acesso">🚀 Começar grátis</a>
+      <a class="cta-primary"    href="/Acesso" target="_self">🚀 Começar grátis</a>
       <a class="cta-secondary"  href="#como"   onclick="return lpScroll('como');">Como funciona →</a>
     </div>
     <div class="hero-stats">
@@ -648,7 +648,7 @@ st.markdown("""
           <li><span>✔</span>40% de desconto no pacote Empresarial</li>
           <li><span>✔</span>Cadastro com CNPJ — nota fiscal disponível</li>
         </ul>
-        <a class="cta-primary" style="display:inline-flex;width:fit-content;" href="/Acesso">
+        <a class="cta-primary" style="display:inline-flex;width:fit-content;" href="/Acesso" target="_self">
           🏢 Criar conta empresarial
         </a>
       </div>

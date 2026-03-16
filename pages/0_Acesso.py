@@ -192,8 +192,8 @@ st.markdown("""
     <a href="/">Contato</a>
   </div>
   <div class="lp-nav-btns">
-    <a class="btn-ghost" href="/">Voltar</a>
-    <a class="btn-wine"  href="/Acesso">Entrar</a>
+    <a class="btn-ghost" href="/" target="_self">Voltar</a>
+    <a class="btn-wine"  href="/Acesso" target="_self">Entrar</a>
   </div>
 </nav>
 """, unsafe_allow_html=True)
