@@ -12,7 +12,8 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
-DB_PATH = Path("dados/db.sqlite")
+DB_PATH        = Path("dados/db.sqlite")
+NORMAS_PATH    = Path("dados/atualizacao_normas.json")
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 
@@ -479,3 +480,25 @@ def atualizar_senha(usuario_id: int, nova_hash: str):
             "UPDATE usuarios SET senha_hash=?, tentativas_login=0, bloqueado_ate='' WHERE id=?",
             (nova_hash, usuario_id)
         )
+
+
+# ── Datas de atualização das normas ──────────────────────────────────────────
+
+_NORMAS_DEFAULT = {"normas_tecnicas": None, "coscip": None}
+
+
+def get_datas_normas() -> dict:
+    """Retorna as datas de última atualização das NTs e COSCIP."""
+    if not NORMAS_PATH.exists():
+        return _NORMAS_DEFAULT.copy()
+    try:
+        return json.loads(NORMAS_PATH.read_text(encoding="utf-8"))
+    except Exception:
+        return _NORMAS_DEFAULT.copy()
+
+
+def set_data_norma(chave: str, data: str):
+    """Atualiza a data de uma norma. chave: 'normas_tecnicas' ou 'coscip'."""
+    dados = get_datas_normas()
+    dados[chave] = data
+    NORMAS_PATH.write_text(json.dumps(dados, ensure_ascii=False, indent=2), encoding="utf-8")

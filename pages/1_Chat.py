@@ -19,7 +19,7 @@ import streamlit as st
 from auth import sessao_logada, get_usuario_sessao, fazer_logout
 from creditos import tem_credito, deduzir_credito, badge_atual
 from db import (listar_conversas_db, salvar_conversa_db,
-                excluir_conversa_db, init_db)
+                excluir_conversa_db, init_db, get_datas_normas)
 from ui import aplicar_tema, nav_inferior, header_usuario
 
 st.set_page_config(page_title="Chat – Mr. Incêndio", page_icon="🔥", layout="wide")
@@ -435,6 +435,35 @@ with st.sidebar:
     st.divider()
     if chunks:
         st.caption(f"📚 {len(chunks)} trechos indexados")
+
+    # ── Datas de atualização das normas ───────────────────────────────────────
+    datas = get_datas_normas()
+
+    def _fmt(d):
+        if not d:
+            return "—"
+        try:
+            from datetime import date
+            return date.fromisoformat(d).strftime("%d/%m/%Y")
+        except Exception:
+            return d
+
+    st.markdown(f"""
+    <div style="margin:.6rem 0;padding:.65rem .8rem;
+                background:rgba(122,35,64,.12);border-radius:10px;
+                border:1px solid rgba(122,35,64,.25);">
+      <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;
+                  letter-spacing:.07em;color:#c4607a;margin-bottom:.35rem;">
+        📅 Última verificação
+      </div>
+      <div style="font-size:.78rem;color:#d0d0e8;line-height:1.7;">
+        <b>NTs CBMERJ:</b> {_fmt(datas.get("normas_tecnicas"))}<br>
+        <b>COSCIP:</b> {_fmt(datas.get("coscip"))}
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.divider()
     if st.button("🚪 Sair", use_container_width=True):
         fazer_logout()
         st.rerun()

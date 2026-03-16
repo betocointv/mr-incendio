@@ -5,8 +5,10 @@ Painel Admin — exclusivo para administradores do sistema.
 import streamlit as st
 from auth import sessao_logada, get_usuario_sessao, fazer_logout
 from creditos import adicionar_creditos, badge_atual
+from datetime import date
 from db import (listar_usuarios, stats_plataforma, buscar_usuario_id,
-                registrar_auditoria, listar_audit_log, init_db)
+                registrar_auditoria, listar_audit_log, init_db,
+                get_datas_normas, set_data_norma)
 from ui import aplicar_tema, nav_inferior, header_usuario
 
 st.set_page_config(page_title="Admin – Mr. Incêndio", page_icon="⚙️", layout="wide")
@@ -92,6 +94,46 @@ if logs:
     st.dataframe(dados_log, use_container_width=True, hide_index=True)
 else:
     st.info("Nenhuma ação registrada ainda.")
+
+st.divider()
+
+# ── Atualização das normas ────────────────────────────────────────────────────
+st.subheader("📅 Última verificação das normas")
+st.caption("Atualize as datas sempre que verificar se há novas versões das NTs ou do COSCIP.")
+
+datas = get_datas_normas()
+
+def _parse_date(d):
+    try:
+        return date.fromisoformat(d) if d else date.today()
+    except Exception:
+        return date.today()
+
+col_nt, col_cos = st.columns(2)
+with col_nt:
+    nova_nt = st.date_input(
+        "📋 NTs CBMERJ",
+        value=_parse_date(datas.get("normas_tecnicas")),
+        format="DD/MM/YYYY",
+        key="data_nt",
+    )
+with col_cos:
+    nova_cos = st.date_input(
+        "📋 COSCIP",
+        value=_parse_date(datas.get("coscip")),
+        format="DD/MM/YYYY",
+        key="data_cos",
+    )
+
+if st.button("✅ Salvar datas de verificação", type="primary"):
+    set_data_norma("normas_tecnicas", nova_nt.isoformat())
+    set_data_norma("coscip", nova_cos.isoformat())
+    registrar_auditoria(
+        usuario["id"], "atualizar_normas",
+        f"NTs: {nova_nt.strftime('%d/%m/%Y')} | COSCIP: {nova_cos.strftime('%d/%m/%Y')}"
+    )
+    st.success("✅ Datas salvas com sucesso!")
+    st.rerun()
 
 st.divider()
 col1, _ = st.columns([1, 3])
