@@ -154,10 +154,10 @@ def _seed(conn: sqlite3.Connection):
         conn.executemany(
             "INSERT INTO pacotes (nome, creditos, preco_brl, desconto_pct) VALUES (?,?,?,?)",
             [
-                ("Básico",       100,   5.00,  0),
-                ("Profissional", 500,  20.00, 20),
-                ("Premium",     1000,  35.00, 30),
-                ("Empresarial", 5000, 150.00, 40),
+                ("Básico",        50,   29.90,  0),
+                ("Profissional",  200,  69.90,  0),
+                ("Premium",       500, 149.90, 30),
+                ("Empresarial",  1000, 199.90, 40),
             ]
         )
 

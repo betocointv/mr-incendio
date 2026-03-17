@@ -125,7 +125,7 @@ else:
     col1, col2, col3, col4 = st.columns(4)
     passos = [
         ("1️⃣", "Crie sua conta", "Cadastro gratuito em segundos. Ganhe 10 créditos de boas-vindas."),
-        ("2️⃣", "Compre créditos", "Escolha o pacote ideal. Quanto mais, mais barato por crédito."),
+        ("2️⃣", "Compre créditos", "A partir de R$ 29,90. Quanto mais, mais barato por crédito."),
         ("3️⃣", "Consulte as NTs", "1 pergunta = 1 crédito. Respostas diretas com base nas normas oficiais."),
         ("4️⃣", "Ganhe pontos", "Cada consulta vale pontos. Troque por créditos grátis."),
     ]
@@ -226,7 +226,7 @@ with col1:
         f'<li>Paga por uso — sem mensalidade</li>'
         f'<li>Ideal para consultas pontuais</li>'
         f'<li>Ganhe pontos a cada consulta</li>'
-        f'<li>Recomendado: Básico ou Profissional</li>'
+        f'<li>Recomendado: Básico (R$ 29,90) ou Profissional (R$ 69,90)</li>'
         f'</ul></div>',
         unsafe_allow_html=True
     )
@@ -239,7 +239,7 @@ with col2:
         f'<li>Créditos compartilhados entre funcionários</li>'
         f'<li>Visibilidade de consumo por colaborador</li>'
         f'<li>Adicione e remova membros facilmente</li>'
-        f'<li>Recomendado: Premium ou Empresarial</li>'
+        f'<li>Recomendado: Premium (R$ 149,90) ou Empresarial (R$ 199,90)</li>'
         f'</ul></div>',
         unsafe_allow_html=True
     )
