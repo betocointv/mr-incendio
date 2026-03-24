@@ -209,6 +209,9 @@ for col, p in zip(cols, pacotes):
             if not sessao_logada():
                 st.session_state.plano_selecionado = p["id"]
                 st.switch_page("app.py")
+            else:
+                st.session_state["plano_pagamento_id"] = p["id"]
+                st.switch_page("pages/8_Pagamento.py")
 
 st.caption("📞 Para adquirir créditos, entre em contato pelo e-mail ou WhatsApp.")
 
