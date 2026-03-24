@@ -258,6 +258,15 @@ with aba_login:
                          f"Tente novamente em {resultado['minutos']} minuto(s).")
             elif resultado:
                 iniciar_sessao(resultado)
+                # Processa créditos pendentes de pagamento via link Pagar.me
+                from db import buscar_pagamentos_pendentes, marcar_pagamento_processado
+                from creditos import adicionar_creditos
+                pendentes = buscar_pagamentos_pendentes(resultado["id"])
+                for pend in pendentes:
+                    adicionar_creditos(resultado["id"], pend["creditos"],
+                                       f"Compra plano {pend['nome']} — Pagar.me link")
+                    marcar_pagamento_processado(pend["id"])
+                    st.success(f"✅ {pend['creditos']} créditos do plano {pend['nome']} adicionados!")
                 st.switch_page("pages/1_Chat.py")
             else:
                 st.error("E-mail ou senha incorretos.")

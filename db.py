@@ -102,6 +102,14 @@ def init_db():
             ativo       INTEGER NOT NULL DEFAULT 1,
             criado_em   TEXT NOT NULL
         );
+
+        CREATE TABLE IF NOT EXISTS pagamentos_pendentes (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario_id  INTEGER NOT NULL REFERENCES usuarios(id),
+            plano_id    INTEGER NOT NULL,
+            processado  INTEGER NOT NULL DEFAULT 0,
+            criado_em   TEXT NOT NULL
+        );
         """)
 
         # Migrações: colunas adicionadas após criação inicial
@@ -548,3 +556,36 @@ def set_data_norma(chave: str, data: str):
     dados = get_datas_normas()
     dados[chave] = data
     NORMAS_PATH.write_text(json.dumps(dados, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+# ── Pagamentos pendentes (links Pagar.me) ──────────────────────────────────────
+
+def criar_pagamento_pendente(usuario_id: int, plano_id: int):
+    with conexao() as conn:
+        conn.execute(
+            "INSERT INTO pagamentos_pendentes (usuario_id, plano_id, criado_em) VALUES (?,?,?)",
+            (usuario_id, plano_id, datetime.now().isoformat())
+        )
+
+
+def buscar_pagamentos_pendentes(usuario_id: int) -> list:
+    """Retorna pagamentos pendentes não processados das últimas 24h."""
+    limite = (datetime.now() - timedelta(hours=24)).isoformat()
+    with conexao() as conn:
+        rows = conn.execute(
+            """SELECT pp.id, pp.plano_id, p.nome, p.creditos, p.preco_brl
+               FROM pagamentos_pendentes pp
+               JOIN pacotes p ON p.id = pp.plano_id
+               WHERE pp.usuario_id=? AND pp.processado=0 AND pp.criado_em > ?
+               ORDER BY pp.criado_em DESC""",
+            (usuario_id, limite)
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def marcar_pagamento_processado(pagamento_id: int):
+    with conexao() as conn:
+        conn.execute(
+            "UPDATE pagamentos_pendentes SET processado=1 WHERE id=?",
+            (pagamento_id,)
+        )
