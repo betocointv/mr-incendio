@@ -14,10 +14,10 @@ PONTOS_PARA_TROCAR  = 50
 CREDITOS_POR_TROCA  = 5
 
 BADGES = [
-    {"key": "iniciante",    "nome": "🔥 Iniciante",      "min": 10,  "desc": "10 consultas realizadas"},
-    {"key": "projetista",   "nome": "📐 Projetista",      "min": 50,  "desc": "50 consultas realizadas"},
-    {"key": "especialista", "nome": "🏗️ Especialista",   "min": 200, "desc": "200 consultas realizadas"},
-    {"key": "mestre",       "nome": "🚒 Mestre CBMERJ",  "min": 500, "desc": "500 consultas realizadas"},
+    {"key": "iniciante",    "nome": "🔥 Iniciante",      "min": 100,  "desc": "100 consultas realizadas"},
+    {"key": "projetista",   "nome": "📐 Projetista",      "min": 500,  "desc": "500 consultas realizadas"},
+    {"key": "especialista", "nome": "🏗️ Especialista",   "min": 2000, "desc": "2000 consultas realizadas"},
+    {"key": "mestre",       "nome": "🚒 Mestre CBMERJ",  "min": 5000, "desc": "5000 consultas realizadas"},
 ]
 
 
