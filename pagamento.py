@@ -72,9 +72,16 @@ def criar_checkout(nome: str, email: str, cpf: str,
                    valor_centavos: int, descricao: str,
                    success_url: str,
                    metadata: dict | None = None) -> dict:
-    """Cria checkout hospedado com PIX e cartão. Retorna dict com payment_url."""
+    """Cria payment link hospedado com PIX e cartão. Retorna dict com url."""
     cpf_limpo = "".join(c for c in cpf if c.isdigit())
     payload = {
+        "name": descricao,
+        "items": [{
+            "amount": valor_centavos,
+            "description": descricao,
+            "quantity": 1,
+            "code": "creditos_mr_incendio",
+        }],
         "payment_settings": {
             "accepted_payment_methods": ["pix", "credit_card"],
             "credit_card_settings": {
@@ -90,16 +97,10 @@ def criar_checkout(nome: str, email: str, cpf: str,
                 "document_type": "CPF",
             }
         },
-        "items": [{
-            "amount": valor_centavos,
-            "description": descricao,
-            "quantity": 1,
-            "code": "creditos_mr_incendio",
-        }],
         "success_url": success_url,
         "metadata": {"site": "mr_incendio", **(metadata or {})},
     }
-    r = requests.post(f"{PAGARME_BASE}/checkouts",
+    r = requests.post(f"{PAGARME_BASE}/payment_links",
                       json=payload, headers=_headers(), timeout=15)
     r.raise_for_status()
     return r.json()
@@ -122,7 +123,7 @@ def ordem_paga(order_id: str) -> bool:
 
 
 def consultar_checkout(checkout_id: str) -> dict:
-    r = requests.get(f"{PAGARME_BASE}/checkouts/{checkout_id}",
+    r = requests.get(f"{PAGARME_BASE}/payment_links/{checkout_id}",
                      headers=_headers(), timeout=10)
     r.raise_for_status()
     return r.json()

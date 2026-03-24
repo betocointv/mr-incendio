@@ -195,7 +195,7 @@ if submitted:
                     metadata={"usuario_id": str(usuario["id"]),
                                "plano_id": str(plano["id"])},
                 )
-                payment_url = checkout.get("payment_url", "")
+                payment_url = checkout.get("url") or checkout.get("payment_url", "")
                 if not payment_url:
                     st.error("Não foi possível obter o link de pagamento.")
                     st.stop()
