@@ -399,8 +399,11 @@ def nav_inferior(pagina_ativa: str, tipo_usuario: str = "pessoal"):
     cols = st.columns(len(pages), gap="small")
     for col, (key, path, icon, label) in zip(cols, pages):
         with col:
-            link = f"{path}?t={token}" if token else path
-            st.page_link(link, label=f"{icon}  {label}", use_container_width=True)
+            if token:
+                st.page_link(path, label=f"{icon}  {label}",
+                             use_container_width=True, query_params={"t": token})
+            else:
+                st.page_link(path, label=f"{icon}  {label}", use_container_width=True)
 
 
 def header_usuario(nome: str, creditos: float, pontos: int, badge: str):
