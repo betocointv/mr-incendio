@@ -238,7 +238,7 @@ for col, p in zip(cols, pacotes):
         elif st.button("Quero este plano", key=f"plano_{p['id']}", use_container_width=True):
             if not usuario:
                 st.session_state.plano_selecionado = p["id"]
-                st.switch_page("app.py")
+                st.switch_page("pages/0_Acesso.py")
             else:
                 st.session_state["plano_pagamento_id"] = p["id"]
                 st.switch_page("pages/8_Pagamento.py")
@@ -337,10 +337,10 @@ if not usuario:
     col_c, col_l, _ = st.columns([1, 1, 2])
     with col_c:
         if st.button("🚀 Criar conta grátis", use_container_width=True):
-            st.switch_page("app.py")
+            st.switch_page("pages/0_Acesso.py")
     with col_l:
         if st.button("🔑 Já tenho conta", use_container_width=True):
-            st.switch_page("app.py")
+            st.switch_page("pages/0_Acesso.py")
 
 st.markdown(" ")
 

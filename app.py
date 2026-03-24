@@ -304,6 +304,14 @@ a.btn-wine:hover, a.btn-wine:active, .btn-wine:hover { opacity:.88; transform:tr
 .plan-orig   { font-size:.78rem; color:var(--dim); text-decoration:line-through; }
 .plan-pct    { font-size:.78rem; color:var(--wine-lt); font-weight:600; margin-top:.25rem; }
 .plan-unit   { font-size:.75rem; color:var(--dim); margin-top:.5rem; }
+.plan-btn {
+  display:block; margin-top:1.2rem; padding:.65rem 1rem;
+  background:linear-gradient(135deg,var(--wine),var(--wine-dk));
+  color:#fff !important; font-size:.85rem; font-weight:700;
+  border-radius:10px; text-decoration:none !important;
+  transition:opacity .2s;
+}
+.plan-btn:hover { opacity:.85; }
 
 /* ── Estados expansão ── */
 .states-row { display:flex; gap:.85rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
@@ -463,8 +471,8 @@ function lpScroll(id) {
     <a href="#contato"   onclick="return lpScroll('contato');">Contato</a>
   </div>
   <div class="lp-nav-btns">
-    <a class="btn-ghost" href="/Acesso" target="_self">Entrar</a>
-    <a class="btn-wine"  href="/Acesso" target="_self">Criar conta grátis</a>
+    <a class="btn-ghost" href="/Acesso" onclick="window.parent.location.href='/Acesso';return false;">Entrar</a>
+    <a class="btn-wine"  href="/Acesso" onclick="window.parent.location.href='/Acesso';return false;">Criar conta grátis</a>
   </div>
 </nav>
 """, unsafe_allow_html=True)
@@ -480,7 +488,7 @@ st.markdown("""
       sem perder tempo. Só a norma certa do RJ.
     </p>
     <div class="hero-actions">
-      <a class="cta-primary"    href="/Acesso" target="_self">🚀 Começar grátis</a>
+      <a class="cta-primary"    href="/Acesso" onclick="window.parent.location.href='/Acesso';return false;">🚀 Começar grátis</a>
       <a class="cta-secondary"  href="#como"   onclick="return lpScroll('como');">Como funciona →</a>
     </div>
     <div class="hero-stats">
@@ -648,7 +656,7 @@ st.markdown("""
           <li><span>✔</span>40% de desconto no pacote Empresarial</li>
           <li><span>✔</span>Cadastro com CNPJ — nota fiscal disponível</li>
         </ul>
-        <a class="cta-primary" style="display:inline-flex;width:fit-content;" href="/Acesso" target="_self">
+        <a class="cta-primary" style="display:inline-flex;width:fit-content;" href="/Acesso" onclick="window.parent.location.href='/Acesso';return false;">
           🏢 Criar conta empresarial
         </a>
       </div>
@@ -686,6 +694,7 @@ for p in pacotes:
         f'<div class="plan-price">R$ {p["preco_brl"]:.2f}</div>'
         f'{pct}'
         f'<div class="plan-unit">R$ {p["preco_brl"]/p["creditos"]*100:.1f} por 100 créditos</div>'
+        f'<a class="plan-btn" href="/Acesso" onclick="window.parent.location.href=\'/Acesso\';return false;">Quero este plano</a>'
         f'</div>'
     )
 

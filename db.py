@@ -159,14 +159,21 @@ def _get_admin_password() -> str:
 
 def _seed(conn: sqlite3.Connection):
     """Insere/atualiza dados iniciais sem duplicatas."""
-    conn.execute("DELETE FROM pacotes")
+    # Remove duplicatas e IDs fora do range 1-4
+    conn.execute("DELETE FROM pacotes WHERE id NOT IN (1,2,3,4)")
     conn.executemany(
-        "INSERT INTO pacotes (nome, creditos, preco_brl, desconto_pct) VALUES (?,?,?,?)",
+        """INSERT INTO pacotes (id, nome, creditos, preco_brl, desconto_pct)
+           VALUES (?,?,?,?,?)
+           ON CONFLICT(id) DO UPDATE SET
+               nome=excluded.nome,
+               creditos=excluded.creditos,
+               preco_brl=excluded.preco_brl,
+               desconto_pct=excluded.desconto_pct""",
         [
-            ("Básico",        50,   29.90,  0),
-            ("Profissional",  200,  69.90,  0),
-            ("Premium",       500, 149.90, 30),
-            ("Empresarial",  1000, 199.90, 40),
+            (1, "Básico",        50,   29.90,  0),
+            (2, "Profissional",  200,  69.90,  0),
+            (3, "Premium",       500, 149.90, 30),
+            (4, "Empresarial",  1000, 199.90, 40),
         ]
     )
 
