@@ -70,7 +70,7 @@ def init_db():
 
         CREATE TABLE IF NOT EXISTS pacotes (
             id           INTEGER PRIMARY KEY AUTOINCREMENT,
-            nome         TEXT NOT NULL,
+            nome         TEXT UNIQUE NOT NULL,
             creditos     INTEGER NOT NULL,
             preco_brl    REAL NOT NULL,
             desconto_pct INTEGER NOT NULL DEFAULT 0
@@ -91,6 +91,15 @@ def init_db():
             token       TEXT UNIQUE NOT NULL,
             expira_em   TEXT NOT NULL,
             usado       INTEGER NOT NULL DEFAULT 0,
+            criado_em   TEXT NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS sessoes (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario_id  INTEGER NOT NULL REFERENCES usuarios(id),
+            token       TEXT UNIQUE NOT NULL,
+            expira_em   TEXT NOT NULL,
+            ativo       INTEGER NOT NULL DEFAULT 1,
             criado_em   TEXT NOT NULL
         );
         """)
@@ -149,11 +158,13 @@ def _get_admin_password() -> str:
 
 
 def _seed(conn: sqlite3.Connection):
-    """Insere dados iniciais se ainda não existirem."""
-    # Garante exatamente 4 pacotes sem duplicatas
-    conn.execute("DELETE FROM pacotes")
+    """Insere/atualiza dados iniciais sem duplicatas."""
     conn.executemany(
-        "INSERT INTO pacotes (nome, creditos, preco_brl, desconto_pct) VALUES (?,?,?,?)",
+        """INSERT INTO pacotes (nome, creditos, preco_brl, desconto_pct) VALUES (?,?,?,?)
+           ON CONFLICT(nome) DO UPDATE SET
+               creditos=excluded.creditos,
+               preco_brl=excluded.preco_brl,
+               desconto_pct=excluded.desconto_pct""",
         [
             ("Básico",        50,   29.90,  0),
             ("Profissional",  200,  69.90,  0),
@@ -496,6 +507,36 @@ def get_datas_normas() -> dict:
         return json.loads(NORMAS_PATH.read_text(encoding="utf-8"))
     except Exception:
         return _NORMAS_DEFAULT.copy()
+
+
+def criar_sessao_token(usuario_id: int, dias: int = 30) -> str:
+    """Cria token de sessão persistente. Retorna o token."""
+    import secrets as _sec
+    token = _sec.token_urlsafe(32)
+    expira = (datetime.now() + timedelta(days=dias)).isoformat()
+    with conexao() as conn:
+        conn.execute(
+            "INSERT INTO sessoes (usuario_id, token, expira_em, criado_em) VALUES (?,?,?,?)",
+            (usuario_id, token, expira, datetime.now().isoformat())
+        )
+    return token
+
+
+def validar_sessao_token(token: str) -> Optional[dict]:
+    """Retorna dados do usuário se token válido, None caso contrário."""
+    with conexao() as conn:
+        row = conn.execute(
+            """SELECT u.* FROM sessoes s
+               JOIN usuarios u ON u.id = s.usuario_id
+               WHERE s.token=? AND s.ativo=1 AND s.expira_em > ?""",
+            (token, datetime.now().isoformat())
+        ).fetchone()
+    return dict(row) if row else None
+
+
+def invalidar_sessao_token(token: str):
+    with conexao() as conn:
+        conn.execute("UPDATE sessoes SET ativo=0 WHERE token=?", (token,))
 
 
 def set_data_norma(chave: str, data: str):

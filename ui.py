@@ -393,11 +393,14 @@ def nav_inferior(pagina_ativa: str, tipo_usuario: str = "pessoal"):
     </style>
     """, unsafe_allow_html=True)
 
-    # Renderiza os links — CSS cuida do posicionamento
+    # Propaga token de sessão nos links para manter login após navegação
+    token = st.session_state.get("_sess_token") or st.query_params.get("t", "")
+
     cols = st.columns(len(pages), gap="small")
     for col, (key, path, icon, label) in zip(cols, pages):
         with col:
-            st.page_link(path, label=f"{icon}  {label}", use_container_width=True)
+            link = f"{path}?t={token}" if token else path
+            st.page_link(link, label=f"{icon}  {label}", use_container_width=True)
 
 
 def header_usuario(nome: str, creditos: float, pontos: int, badge: str):

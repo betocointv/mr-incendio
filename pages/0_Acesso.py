@@ -2,7 +2,7 @@
 Mr. Incêndio — Página de acesso (login / cadastro).
 """
 import streamlit as st
-from auth import login, registrar, sessao_logada, solicitar_reset, confirmar_reset
+from auth import login, registrar, sessao_logada, iniciar_sessao, solicitar_reset, confirmar_reset
 from ui import aplicar_tema
 
 st.set_page_config(page_title="Acesso · Mr. Incêndio", page_icon="🔥", layout="wide")
@@ -257,10 +257,7 @@ with aba_login:
                 st.error(f"🔒 Conta bloqueada por tentativas excessivas. "
                          f"Tente novamente em {resultado['minutos']} minuto(s).")
             elif resultado:
-                st.session_state.usuario_id   = resultado["id"]
-                st.session_state.usuario_nome = resultado["nome"]
-                st.session_state.usuario_tipo = resultado["tipo"]
-                st.session_state.empresa_id   = resultado["empresa_id"]
+                iniciar_sessao(resultado)
                 st.switch_page("pages/1_Chat.py")
             else:
                 st.error("E-mail ou senha incorretos.")

@@ -180,8 +180,46 @@ def registrar(nome: str, email: str, senha: str, tipo: str,
 
 # ── Sessão ────────────────────────────────────────────────────────────────────
 
+_SESS_PARAM = "t"  # nome do query param que carrega o token de sessão
+_SESS_KEYS  = ["usuario_id", "usuario_nome", "usuario_tipo", "empresa_id",
+               "conversa_atual", "pergunta_sugerida", "_sess_token"]
+
+
+def _preencher_sessao(usuario: dict, token: str = ""):
+    st.session_state["usuario_id"]   = usuario["id"]
+    st.session_state["usuario_nome"] = usuario["nome"]
+    st.session_state["usuario_tipo"] = usuario["tipo"]
+    st.session_state["empresa_id"]   = usuario.get("empresa_id")
+    if token:
+        st.session_state["_sess_token"] = token
+
+
+def iniciar_sessao(usuario: dict):
+    """Cria token persistente, salva na sessão e injeta no query param."""
+    from db import criar_sessao_token
+    token = criar_sessao_token(usuario["id"])
+    _preencher_sessao(usuario, token)
+    st.query_params[_SESS_PARAM] = token
+
+
 def sessao_logada() -> bool:
-    return bool(st.session_state.get("usuario_id"))
+    # Caminho rápido — já está na sessão
+    if st.session_state.get("usuario_id"):
+        return True
+    # Tenta restaurar pelo token no query param (persiste em refresh)
+    token = st.query_params.get(_SESS_PARAM, "")
+    if token:
+        from db import validar_sessao_token
+        usuario = validar_sessao_token(token)
+        if usuario:
+            _preencher_sessao(usuario, token)
+            return True
+        # Token inválido — remove da URL
+        try:
+            del st.query_params[_SESS_PARAM]
+        except Exception:
+            pass
+    return False
 
 
 def get_usuario_sessao() -> Optional[dict]:
@@ -196,9 +234,18 @@ def get_usuario_sessao() -> Optional[dict]:
 
 
 def fazer_logout():
-    keys = ["usuario_id", "usuario_nome", "usuario_tipo", "empresa_id",
-            "conversa_atual", "pergunta_sugerida"]
-    for k in keys:
+    token = st.session_state.get("_sess_token") or st.query_params.get(_SESS_PARAM, "")
+    if token:
+        from db import invalidar_sessao_token
+        try:
+            invalidar_sessao_token(token)
+        except Exception:
+            pass
+        try:
+            del st.query_params[_SESS_PARAM]
+        except Exception:
+            pass
+    for k in _SESS_KEYS:
         st.session_state.pop(k, None)
 
 
