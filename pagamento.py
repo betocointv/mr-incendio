@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import base64
 import os
+import re
 
 import requests
 import streamlit as st
@@ -66,41 +67,63 @@ def extrair_pix(ordem: dict) -> tuple[str, str]:
         return "", ""
 
 
-# ── Checkout hospedado (PIX + Cartão — página do Pagar.me) ───────────────────
+# ── Cartão — tokenização + ordem ─────────────────────────────────────────────
 
-def criar_checkout(nome: str, email: str, cpf: str,
-                   valor_centavos: int, descricao: str,
-                   success_url: str,
-                   metadata: dict | None = None) -> dict:
-    """Cria payment link hospedado com PIX e cartão. Retorna dict com url."""
-    cpf_limpo = "".join(c for c in cpf if c.isdigit())
+def _public_key() -> str:
+    return st.secrets.get("PAGARME_PUBLIC_KEY",
+                          os.environ.get("PAGARME_PUBLIC_KEY", ""))
+
+
+def tokenizar_cartao(numero: str, titular: str,
+                     mes: int, ano: int, cvv: str) -> str:
+    """Tokeniza cartão via Pagar.me V5. Retorna o card_token."""
+    pub = _public_key()
     payload = {
-        "name": descricao,
+        "type": "card",
+        "card": {
+            "number": re.sub(r"\D", "", numero),
+            "holder_name": titular.upper(),
+            "exp_month": mes,
+            "exp_year": ano,
+            "cvv": cvv,
+        },
+    }
+    r = requests.post(f"{PAGARME_BASE}/tokens?appId={pub}",
+                      json=payload, timeout=10)
+    r.raise_for_status()
+    return r.json()["id"]
+
+
+def criar_cartao(nome: str, email: str, cpf: str,
+                 card_token: str, valor_centavos: int,
+                 descricao: str, metadata: dict | None = None) -> dict:
+    """Cria ordem de cartão no Pagar.me V5."""
+    cpf_limpo = re.sub(r"\D", "", cpf)
+    payload = {
         "items": [{
             "amount": valor_centavos,
             "description": descricao,
             "quantity": 1,
             "code": "creditos_mr_incendio",
         }],
-        "payment_settings": {
-            "accepted_payment_methods": ["pix", "credit_card"],
-            "credit_card_settings": {
-                "installments": [{"number": 1, "total": valor_centavos}]
+        "customer": {
+            "name": nome,
+            "email": email,
+            "type": "individual",
+            "document": cpf_limpo,
+            "document_type": "cpf",
+        },
+        "payments": [{
+            "payment_method": "credit_card",
+            "credit_card": {
+                "card_token": card_token,
+                "installments": 1,
+                "statement_descriptor": "MR INCENDIO",
             },
-        },
-        "customer_settings": {
-            "customer": {
-                "name": nome,
-                "email": email,
-                "type": "individual",
-                "document": cpf_limpo,
-                "document_type": "CPF",
-            }
-        },
-        "success_url": success_url,
+        }],
         "metadata": {"site": "mr_incendio", **(metadata or {})},
     }
-    r = requests.post(f"{PAGARME_BASE}/payment_links",
+    r = requests.post(f"{PAGARME_BASE}/orders",
                       json=payload, headers=_headers(), timeout=15)
     r.raise_for_status()
     return r.json()
@@ -122,16 +145,5 @@ def ordem_paga(order_id: str) -> bool:
         return False
 
 
-def consultar_checkout(checkout_id: str) -> dict:
-    r = requests.get(f"{PAGARME_BASE}/payment_links/{checkout_id}",
-                     headers=_headers(), timeout=10)
-    r.raise_for_status()
-    return r.json()
-
-
-def checkout_pago(checkout_id: str) -> bool:
-    try:
-        data = consultar_checkout(checkout_id)
-        return data.get("status") in ("paid", "overpaid")
-    except Exception:
-        return False
+def checkout_pago(_: str) -> bool:
+    return False  # não usado — mantido para compatibilidade
