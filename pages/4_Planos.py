@@ -145,7 +145,7 @@ else:
 st.markdown("#### 💰 Pacotes de créditos")
 pacotes = listar_pacotes()
 
-cols = st.columns(len(pacotes))
+cols = st.columns(min(len(pacotes), 4))
 for col, p in zip(cols, pacotes):
     destaque = p["desconto_pct"] >= 30
     borda = "#7a2340" if destaque else tc['border']

@@ -150,16 +150,17 @@ def _get_admin_password() -> str:
 
 def _seed(conn: sqlite3.Connection):
     """Insere dados iniciais se ainda não existirem."""
-    if not conn.execute("SELECT 1 FROM pacotes").fetchone():
-        conn.executemany(
-            "INSERT INTO pacotes (nome, creditos, preco_brl, desconto_pct) VALUES (?,?,?,?)",
-            [
-                ("Básico",        50,   29.90,  0),
-                ("Profissional",  200,  69.90,  0),
-                ("Premium",       500, 149.90, 30),
-                ("Empresarial",  1000, 199.90, 40),
-            ]
-        )
+    # Garante exatamente 4 pacotes sem duplicatas
+    conn.execute("DELETE FROM pacotes")
+    conn.executemany(
+        "INSERT INTO pacotes (nome, creditos, preco_brl, desconto_pct) VALUES (?,?,?,?)",
+        [
+            ("Básico",        50,   29.90,  0),
+            ("Profissional",  200,  69.90,  0),
+            ("Premium",       500, 149.90, 30),
+            ("Empresarial",  1000, 199.90, 40),
+        ]
+    )
 
     if not conn.execute("SELECT 1 FROM usuarios WHERE tipo='admin'").fetchone():
         from auth import hash_senha
