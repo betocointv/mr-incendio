@@ -19,13 +19,43 @@ aplicar_tema()
 
 tc = tema_cores()
 
-# ── Seção de saldo (apenas logados) ───────────────────────────────────────────
+# ── Sidebar (apenas logados) ───────────────────────────────────────────────────
+usuario = None
 if sessao_logada():
     usuario = get_usuario_sessao()
     if not usuario:
         fazer_logout()
         st.rerun()
 
+    badge = badge_atual(usuario["pontos"])
+    with st.sidebar:
+        import html as _html
+        st.markdown(f"""
+        <div style="margin-bottom:1rem;">
+          <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.6rem;">
+            <div style="width:34px;height:34px;border-radius:9px;
+                        background:linear-gradient(135deg,#7a2340,#561629);
+                        display:flex;align-items:center;justify-content:center;
+                        font-size:1rem;flex-shrink:0;">🔥</div>
+            <span style="font-size:1rem;font-weight:800;color:#fff;">Mr. Incêndio</span>
+          </div>
+          <div style="font-size:.88rem;font-weight:600;color:#f0f0f8;margin-bottom:.3rem;">
+            {_html.escape(usuario["nome"])}
+          </div>
+          <span class="badge-chip">{badge}</span>
+          <div style="margin-top:.5rem;font-size:.82rem;color:#9090b8;">
+            💳 <strong style="color:#f0f0f8;">{usuario["creditos"]:.0f}</strong>&nbsp;&nbsp;
+            ⭐ <strong style="color:#f0f0f8;">{usuario["pontos"]}</strong>
+          </div>
+        </div>
+        """, unsafe_allow_html=True)
+        st.divider()
+        if st.button("🚪 Sair", use_container_width=True):
+            fazer_logout()
+            st.rerun()
+
+# ── Seção de saldo (apenas logados) ───────────────────────────────────────────
+if usuario:
     uid = usuario["id"]
     header_usuario(usuario["nome"], usuario["creditos"], usuario["pontos"],
                    badge_atual(usuario["pontos"]))
@@ -104,7 +134,7 @@ if sessao_logada():
     st.divider()
 
 # ── Cabeçalho público (apenas não logados) ────────────────────────────────────
-else:
+elif not usuario:
     st.markdown("""
 <div style="text-align:center;padding:2rem 0 1rem;">
     <div style="font-size:0.85rem;color:#7a2340;font-weight:600;
@@ -170,7 +200,7 @@ for col, p in zip(cols, pacotes):
     custo_100 = p['preco_brl'] / p['creditos'] * 100 if p['creditos'] else 0
 
     # Plano Empresarial: só disponível para empresa_admin
-    tipo_usuario = usuario.get("tipo", "") if sessao_logada() and usuario else ""
+    tipo_usuario = usuario.get("tipo", "") if usuario else ""
     exclusivo_empresa = p["desconto_pct"] >= 40
     bloqueado = exclusivo_empresa and tipo_usuario not in ("empresa_admin", "admin")
 
@@ -206,7 +236,7 @@ for col, p in zip(cols, pacotes):
             st.button("🔒 Exclusivo para Empresas", key=f"plano_{p['id']}",
                       use_container_width=True, disabled=True)
         elif st.button("Quero este plano", key=f"plano_{p['id']}", use_container_width=True):
-            if not sessao_logada():
+            if not usuario:
                 st.session_state.plano_selecionado = p["id"]
                 st.switch_page("app.py")
             else:
@@ -295,7 +325,7 @@ with st.expander("Quais normas estão disponíveis?"):
 st.markdown("---")
 
 # ── CTA final (apenas não logados) ────────────────────────────────────────────
-if not sessao_logada():
+if not usuario:
     st.markdown("""
 <div style="text-align:center;padding:2rem 0;">
     <div style="font-size:1.4rem;font-weight:700;">Pronto para começar?</div>
@@ -315,5 +345,5 @@ if not sessao_logada():
 st.markdown(" ")
 
 # ── Navegação inferior ─────────────────────────────────────────────────────────
-if sessao_logada():
+if usuario:
     nav_inferior("planos", usuario.get("tipo", "pessoal"))
