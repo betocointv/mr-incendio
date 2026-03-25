@@ -104,11 +104,12 @@ def init_db():
         );
 
         CREATE TABLE IF NOT EXISTS pagamentos_pendentes (
-            id          INTEGER PRIMARY KEY AUTOINCREMENT,
-            usuario_id  INTEGER NOT NULL REFERENCES usuarios(id),
-            plano_id    INTEGER NOT NULL,
-            processado  INTEGER NOT NULL DEFAULT 0,
-            criado_em   TEXT NOT NULL
+            id               INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario_id       INTEGER NOT NULL REFERENCES usuarios(id),
+            plano_id         INTEGER NOT NULL,
+            processado       INTEGER NOT NULL DEFAULT 0,
+            order_pagarme_id TEXT NOT NULL DEFAULT '',
+            criado_em        TEXT NOT NULL
         );
         """)
 
@@ -118,6 +119,9 @@ def init_db():
             ("cpf",              "TEXT NOT NULL DEFAULT ''"),
             ("tentativas_login", "INTEGER NOT NULL DEFAULT 0"),
             ("bloqueado_ate",    "TEXT NOT NULL DEFAULT ''"),
+        ])
+        _migrar_colunas(conn, "pagamentos_pendentes", [
+            ("order_pagarme_id", "TEXT NOT NULL DEFAULT ''"),
         ])
 
         _seed(conn)
@@ -583,9 +587,21 @@ def buscar_pagamentos_pendentes(usuario_id: int) -> list:
     return [dict(r) for r in rows]
 
 
-def marcar_pagamento_processado(pagamento_id: int):
+def marcar_pagamento_processado(pagamento_id: int, order_id: str = ""):
     with conexao() as conn:
         conn.execute(
-            "UPDATE pagamentos_pendentes SET processado=1 WHERE id=?",
-            (pagamento_id,)
+            "UPDATE pagamentos_pendentes SET processado=1, order_pagarme_id=? WHERE id=?",
+            (order_id, pagamento_id)
         )
+
+
+def order_ja_processada(order_id: str) -> bool:
+    """Verifica se um order_id do Pagar.me já foi usado para adicionar créditos."""
+    if not order_id:
+        return False
+    with conexao() as conn:
+        row = conn.execute(
+            "SELECT id FROM pagamentos_pendentes WHERE order_pagarme_id=? AND processado=1",
+            (order_id,)
+        ).fetchone()
+    return row is not None

@@ -145,5 +145,34 @@ def ordem_paga(order_id: str) -> bool:
         return False
 
 
-def checkout_pago(_: str) -> bool:
-    return False  # não usado — mantido para compatibilidade
+def buscar_ordem_paga_por_valor(valor_centavos: int, minutos: int = 60) -> str | None:
+    """
+    Busca nas últimas N ordens pagas uma com o valor exato.
+    Retorna o order_id encontrado ou None.
+    """
+    from datetime import datetime, timedelta, timezone
+    try:
+        r = requests.get(f"{PAGARME_BASE}/orders",
+                         params={"size": 20, "status": "paid"},
+                         headers=_headers(), timeout=10)
+        r.raise_for_status()
+        data = r.json()
+        cutoff = datetime.now(timezone.utc) - timedelta(minutes=minutos)
+        for order in data.get("data", []):
+            criado_str = order.get("created_at", "")
+            try:
+                criado = datetime.fromisoformat(criado_str.replace("Z", "+00:00"))
+            except Exception:
+                continue
+            if criado < cutoff:
+                continue
+            # Soma os charges para verificar o valor total
+            total = sum(
+                ch.get("amount", 0)
+                for ch in order.get("charges", [])
+            )
+            if total == valor_centavos:
+                return order["id"]
+    except Exception:
+        pass
+    return None
