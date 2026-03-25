@@ -115,12 +115,12 @@ if st.session_state.get("aguardando_link_pagarme"):
             Finalize o pagamento no Pagar.me
         </div>
         <div style="font-size:.88rem;color:#9090b8;margin-bottom:1rem;">
-            Uma nova aba foi aberta. Após pagar, volte aqui e clique em <b>Já paguei</b>.
+            Clique no botão abaixo para abrir o Pagar.me. Após pagar, volte aqui e clique em <b>Já paguei</b>.
         </div>
         <a href="{link}" target="_blank"
-           style="background:#7a2340;color:white;padding:.6rem 1.4rem;border-radius:8px;
-                  text-decoration:none;font-weight:700;font-size:.95rem;">
-            🔗 Abrir Pagar.me novamente
+           style="background:#7a2340;color:white;padding:.7rem 1.8rem;border-radius:8px;
+                  text-decoration:none;font-weight:700;font-size:1rem;">
+            🔗 Abrir Pagar.me para pagar
         </a>
     </div>
     """, unsafe_allow_html=True)
@@ -180,12 +180,6 @@ with col_card:
                  type="primary", key="btn_link"):
         criar_pagamento_pendente(usuario["id"], plano["id"])
         st.session_state["aguardando_link_pagarme"] = True
-        link = LINKS_PAGARME.get(plano["id"], "")
-        # Abre em nova aba
-        st.markdown(
-            f'<script>window.open("{link}", "_blank");</script>',
-            unsafe_allow_html=True,
-        )
         st.rerun()
 
 with col_pix:
