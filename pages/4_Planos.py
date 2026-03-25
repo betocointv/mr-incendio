@@ -243,7 +243,6 @@ for col, p in zip(cols, pacotes):
                 st.session_state["plano_pagamento_id"] = p["id"]
                 st.switch_page("pages/8_Pagamento.py")
 
-st.caption("📞 Para adquirir créditos, entre em contato pelo e-mail ou WhatsApp.")
 
 st.markdown("---")
 
