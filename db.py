@@ -605,3 +605,4 @@ def order_ja_processada(order_id: str) -> bool:
             (order_id,)
         ).fetchone()
     return row is not None
+
