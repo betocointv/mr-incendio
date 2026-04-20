@@ -131,7 +131,7 @@ a.btn-wine:hover, a.btn-wine:active, .btn-wine:hover { opacity:.88; transform:tr
 .hero h1 em { font-style:normal; color:var(--wine-lt); }
 .hero-sub {
   font-size:clamp(1rem,1.8vw,1.15rem); color:var(--muted);
-  max-width:560px; margin:0 auto 2.5rem; line-height:1.7;
+  max-width:560px; margin:0 auto 2.5rem; line-height:1.7; text-align:center;
 }
 .hero-actions {
   display:flex; gap:.85rem; justify-content:center; flex-wrap:wrap; margin-bottom:3.5rem;
