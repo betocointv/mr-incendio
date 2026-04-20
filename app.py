@@ -131,7 +131,7 @@ a.btn-wine:hover, a.btn-wine:active, .btn-wine:hover { opacity:.88; transform:tr
 .hero h1 em { font-style:normal; color:var(--wine-lt); }
 .hero-sub {
   font-size:clamp(1rem,1.8vw,1.15rem); color:var(--muted);
-  max-width:560px; margin:0 auto 2.5rem; line-height:1.7; text-align:center;
+  max-width:720px; margin:0 auto 2.5rem; line-height:1.7; text-align:center;
 }
 .hero-actions {
   display:flex; gap:.85rem; justify-content:center; flex-wrap:wrap; margin-bottom:3.5rem;
@@ -484,8 +484,7 @@ st.markdown("""
     <div class="hero-badge">🚒 Corpo de Bombeiros do Estado do Rio de Janeiro</div>
     <h1>Consulte as <em>Normas Técnicas</em><br>do CBMERJ com IA</h1>
     <p class="hero-sub">
-      Respostas diretas em segundos — sem abrir PDF, sem interpretar tabelas,
-      sem perder tempo. Só a norma certa do RJ.
+      Respostas diretas em segundos — sem abrir PDF, sem interpretar tabelas, sem perder tempo. Só a norma certa do RJ.
     </p>
     <div class="hero-actions">
       <a class="cta-primary"    href="/Acesso" onclick="window.parent.location.href='/Acesso';return false;">🚀 Começar grátis</a>
