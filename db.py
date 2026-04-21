@@ -189,14 +189,21 @@ def _seed(conn: sqlite3.Connection):
         ]
     )
 
+    from auth import hash_senha
+    senha = _get_admin_password()
+    senha_hash = hash_senha(senha)
     if not conn.execute("SELECT 1 FROM usuarios WHERE tipo='admin'").fetchone():
-        from auth import hash_senha
-        senha = _get_admin_password()
         conn.execute(
             """INSERT INTO usuarios (nome, email, senha_hash, tipo, creditos, pontos, criado_em)
                VALUES (?,?,?,?,?,?,?)""",
-            ("Admin", "admin@cbmerj.app", hash_senha(senha),
+            ("Admin", "admin@cbmerj.app", senha_hash,
              "admin", 9999, 0, datetime.now().isoformat())
+        )
+    else:
+        # Atualiza senha sempre que o app reinicia (sincroniza com secrets)
+        conn.execute(
+            "UPDATE usuarios SET senha_hash=? WHERE tipo='admin'",
+            (senha_hash,)
         )
 
 
