@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import html as _html
 import os
-import pickle
 import re
 import uuid
 from datetime import datetime
@@ -20,6 +19,7 @@ from auth import sessao_logada, get_usuario_sessao, fazer_logout
 from creditos import tem_credito, deduzir_credito, badge_atual
 from db import (listar_conversas_db, salvar_conversa_db,
                 excluir_conversa_db, init_db, get_datas_normas)
+from rag import buscar, montar_contexto, carregar_indice as _carregar_indice
 from ui import aplicar_tema, nav_inferior, header_usuario
 
 st.set_page_config(page_title="Chat – Mr. Incêndio", page_icon="🔥", layout="wide")
@@ -42,7 +42,6 @@ api_key = st.secrets.get("ANTHROPIC_API_KEY", os.environ.get("ANTHROPIC_API_KEY"
 ARQUIVO_CHUNKS = Path("dados/chunks.pkl")
 ARQUIVO_BM25   = Path("dados/bm25.pkl")
 MAX_CONVERSAS  = 5
-NUM_CHUNKS     = 25
 MODELO         = "claude-haiku-4-5-20251001"
 
 # ── CSS do chat estilizado ────────────────────────────────────────────────────
@@ -223,95 +222,12 @@ div[data-testid="stHorizontalBlock"] button[kind="secondary"]:hover {
 """, unsafe_allow_html=True)
 
 
-# ── Funções de busca ──────────────────────────────────────────────────────────
+# ── Carregamento do índice (cacheado) ─────────────────────────────────────────
+# A lógica de busca (BM25 + sinônimos) vive em rag.py — módulo puro e testável.
 
 @st.cache_resource(show_spinner="Carregando índice de normas...")
 def carregar_indice():
-    if not ARQUIVO_CHUNKS.exists() or not ARQUIVO_BM25.exists():
-        return None, None
-    with open(ARQUIVO_CHUNKS, "rb") as f:
-        chunks = pickle.load(f)
-    with open(ARQUIVO_BM25, "rb") as f:
-        bm25 = pickle.load(f)
-    return chunks, bm25
-
-
-def tokenizar(texto):
-    return re.findall(r'\b[a-z\xe1\xe9\xed\xf3\xfa\xe0\xe3\xf5\xe2\xea\xee\xf4\xfb\xe7]+\b',
-                      texto.lower())
-
-
-SINONIMOS = {
-    "caminhao":      ["viatura", "veiculo", "autoviatura"],
-    "bombeiro":      ["bombeiros", "cbmerj", "corpo"],
-    "re":            ["marcha", "recuo", "retrocesso", "retorno", "manobra"],
-    "voltar":        ["recuar", "retroceder", "manobra", "retorno"],
-    "andar":         ["pavimento", "piso"],
-    "escada":        ["escadaria", "saida", "emergencia"],
-    "extintor":      ["extintores", "portatil", "protecao"],
-    "hidrante":      ["hidrantes", "mangotinho", "mangueira"],
-    "sprinkler":     ["chuveiro", "automatico", "aspersao", "chuveiros"],
-    "alarme":        ["deteccao", "sensor", "acionador"],
-    "saida":         ["emergencia", "evacuacao", "escape"],
-    "corredor":      ["passagem", "circulacao", "acesso"],
-    "altura":        ["pavimentos", "andares", "metros", "piso"],
-    "reserva":       ["reservatorio", "agua", "rti", "volume"],
-    "residencial":   ["habitacao", "multifamiliar", "unifamiliar", "residencia",
-                      "apartamento", "a-1", "a-2", "a-3", "a-4", "a-5"],
-    "comercial":     ["loja", "escritorio", "servicos", "d-1", "d-2", "d-3",
-                      "c-1", "c-2", "c-3"],
-    "industrial":    ["fabrica", "deposito", "armazem", "i-1", "i-2", "i-3"],
-    "obrigatorio":   ["exigido", "obrigatoriedade", "deve", "necessario",
-                      "requerido", "exige"],
-    "classificacao": ["ocupacao", "risco", "grupo", "divisao", "categoria",
-                      "anexo", "tabela"],
-    "area":          ["m2", "metros", "quadrados", "metragem", "tamanho"],
-    "pavimento":     ["andar", "piso", "nivel", "subsolo", "terreo"],
-    "edificio":      ["edificacao", "predio", "construcao", "imóvel", "imovel"],
-    "hotel":         ["hospedagem", "pousada", "hostel", "h-1", "h-2", "h-3"],
-    "hospital":      ["clinica", "saude", "medico", "e-1", "e-2", "e-3"],
-}
-
-
-def expandir_query(pergunta):
-    import unicodedata
-    def normalizar(s):
-        return ''.join(c for c in unicodedata.normalize('NFD', s)
-                       if unicodedata.category(c) != 'Mn')
-    tokens = re.findall(r'\b\w+\b', normalizar(pergunta.lower()))
-    extras = []
-    for t in tokens:
-        if t in SINONIMOS:
-            extras.extend(SINONIMOS[t])
-    return tokenizar(pergunta) + extras
-
-
-def buscar(pergunta, chunks, bm25):
-    tokens = expandir_query(pergunta)
-    scores = bm25.get_scores(tokens)
-    indices_top = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)[:NUM_CHUNKS]
-    selecionados = {i for i in indices_top if scores[i] > 0}
-
-    top_por_nt: dict = {}
-    for i, score in enumerate(scores):
-        if score <= 0:
-            continue
-        nt = chunks[i]["nt"]
-        if nt not in top_por_nt:
-            top_por_nt[nt] = []
-        top_por_nt[nt].append((i, score))
-    for lista in top_por_nt.values():
-        lista.sort(key=lambda x: x[1], reverse=True)
-        for i, _ in lista[:4]:
-            selecionados.add(i)
-
-    return [chunks[i] for i in sorted(selecionados, key=lambda i: scores[i], reverse=True)]
-
-
-def montar_contexto(resultados):
-    return "\n\n---\n\n".join(
-        f"[NT-{r['nt']} – {r['titulo']}]\n{r['texto']}" for r in resultados
-    )
+    return _carregar_indice(ARQUIVO_CHUNKS, ARQUIVO_BM25)
 
 
 def consultar_ia(mensagens, contexto, api_key):

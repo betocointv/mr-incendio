@@ -1,5 +1,7 @@
 # ── Segredos — NUNCA enviar ao GitHub ──────────────────────────────────────
 .streamlit/secrets.toml
+.streamlit/secrets.toml.bak
+*.bak
 
 # ── Banco de dados local (regenerado automaticamente) ───────────────────────
 dados/db.sqlite
@@ -7,6 +9,9 @@ dados/conversas/
 
 # ── PDFs das normas (pesados demais, não necessários no deploy) ─────────────
 normas/
+
+# ── Config local do Claude Code (por máquina) ───────────────────────────────
+.claude/settings.local.json
 
 # ── Python ──────────────────────────────────────────────────────────────────
 __pycache__/
