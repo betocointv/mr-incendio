@@ -136,37 +136,47 @@ def _migrar_colunas(conn, tabela: str, colunas: list):
             pass  # coluna já existe
 
 
-def _get_admin_password() -> str:
-    """
-    Lê senha do admin de:
-      1. st.secrets["ADMIN_PASSWORD"]
-      2. variável de ambiente ADMIN_PASSWORD
-      3. Gera aleatoriamente e imprime aviso (somente na primeira execução)
-    """
-    # 1. Streamlit secrets
+def _ler_secret(nome: str) -> str:
+    """Lê um segredo de st.secrets ou da variável de ambiente."""
     try:
         import streamlit as st
-        pwd = st.secrets.get("ADMIN_PASSWORD")
-        if pwd:
-            return pwd
+        val = st.secrets.get(nome)
+        if val:
+            return val
     except Exception:
         pass
+    return os.environ.get(nome, "")
 
-    # 2. Variável de ambiente
-    pwd = os.environ.get("ADMIN_PASSWORD")
+
+def _get_admin_hash() -> str:
+    """
+    Retorna o hash bcrypt da senha do admin. Ordem de preferência:
+      1. ADMIN_PASSWORD_HASH (hash pronto — recomendado, não re-hasheia)
+      2. ADMIN_PASSWORD (texto puro — compatibilidade; gera o hash na hora)
+      3. Gera senha aleatória, avisa no console e retorna o hash dela
+    """
+    from auth import hash_senha
+
+    # 1. Hash já pronto no secrets/env — caminho recomendado
+    h = _ler_secret("ADMIN_PASSWORD_HASH")
+    if h:
+        return h
+
+    # 2. Compatibilidade: senha em texto puro
+    pwd = _ler_secret("ADMIN_PASSWORD")
     if pwd:
-        return pwd
+        return hash_senha(pwd)
 
-    # 3. Gera senha aleatória e avisa no console
+    # 3. Nada definido — gera senha aleatória e avisa só no console
     pwd = _secrets.token_urlsafe(16)
     sep = "=" * 56
     print(f"\n{sep}")
-    print("[AVISO SEGURANÇA] Nenhuma ADMIN_PASSWORD definida.")
+    print("[AVISO SEGURANÇA] Nenhum ADMIN_PASSWORD_HASH definido.")
     print(f"Senha admin gerada: {pwd}")
-    print("Adicione em .streamlit/secrets.toml:")
-    print(f'ADMIN_PASSWORD = "{pwd}"')
+    print("Gere o hash com 'python gerar_hash_admin.py' e adicione em")
+    print(".streamlit/secrets.toml como ADMIN_PASSWORD_HASH.")
     print(f"{sep}\n")
-    return pwd
+    return hash_senha(pwd)
 
 
 def _seed(conn: sqlite3.Connection):
@@ -189,18 +199,19 @@ def _seed(conn: sqlite3.Connection):
         ]
     )
 
-    from auth import hash_senha
-    senha = _get_admin_password()
-    senha_hash = hash_senha(senha)
-    if not conn.execute("SELECT 1 FROM usuarios WHERE tipo='admin'").fetchone():
+    senha_hash = _get_admin_hash()
+    row = conn.execute(
+        "SELECT senha_hash FROM usuarios WHERE tipo='admin'"
+    ).fetchone()
+    if not row:
         conn.execute(
             """INSERT INTO usuarios (nome, email, senha_hash, tipo, creditos, pontos, criado_em)
                VALUES (?,?,?,?,?,?,?)""",
             ("Admin", "admin@cbmerj.app", senha_hash,
              "admin", 9999, 0, datetime.now().isoformat())
         )
-    else:
-        # Atualiza senha sempre que o app reinicia (sincroniza com secrets)
+    elif row["senha_hash"] != senha_hash:
+        # Só grava quando o hash realmente mudou (evita escrita a cada boot)
         conn.execute(
             "UPDATE usuarios SET senha_hash=? WHERE tipo='admin'",
             (senha_hash,)
